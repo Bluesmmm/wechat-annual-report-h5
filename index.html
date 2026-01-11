@@ -30,6 +30,41 @@
     .title { font-size: 22px; font-weight: 800; letter-spacing: .5px; text-shadow: 0 2px 10px rgba(0,0,0,.35); }
     .subtitle { font-size: 14px; opacity: .9; text-shadow: 0 2px 10px rgba(0,0,0,.35); line-height: 1.4; }
 
+    /* Cover page (first page) special styles */
+    .page-cover .content {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .page-cover .title {
+      font-size: clamp(24px, 5vw, 36px);
+      margin-bottom: 16px;
+    }
+    .page-cover .subtitle {
+      font-size: clamp(14px, 3vw, 20px);
+      margin-bottom: 24px;
+    }
+    .page-cover .card {
+      width: 100%;
+      max-width: 360px;
+      margin-top: 0;
+      padding: 20px 24px;
+    }
+    .page-cover .kv {
+      padding: 12px 0;
+    }
+    .page-cover .k {
+      font-size: clamp(14px, 2.5vw, 16px);
+    }
+    .page-cover .v {
+      font-size: clamp(15px, 2.8vw, 18px);
+    }
+
+    /* Stagger animation delays */
+    .fade-up-1 { transition-delay: 0s; }
+    .fade-up-2 { transition-delay: 0.15s; }
+    .fade-up-3 { transition-delay: 0.3s; }
+
     .card {
       margin-top: auto;
       background: rgba(255,255,255,.12);
@@ -376,7 +411,8 @@
       console.log('[Main] Starting to render slides...');
       pages.forEach((pg, idx) => {
         const slide = document.createElement("div");
-        slide.className = "swiper-slide page";
+        const isCover = pg.type === 'cover' || pg.id === 1;
+        slide.className = `swiper-slide page${isCover ? ' page-cover' : ''}`;
 
         const kvHtml = (pg.kv || []).map(item => `
           <div class="kv">
@@ -457,12 +493,12 @@
           <div class="pager">${pg.id} / 13</div>
 
           <div class="content">
-            <div class="fade-up">
+            <div class="fade-up ${isCover ? 'fade-up-1' : ''}">
               <div class="title">${pg.title || ""}</div>
               <div class="subtitle">${pg.subtitle || ""}</div>
             </div>
 
-            <div class="card fade-up">
+            <div class="card fade-up ${isCover ? 'fade-up-2' : ''}">
               ${kvHtml}
               ${barsHtml}
               ${countersHtml}
