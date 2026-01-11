@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>兔妈和八爸的年度聊天记录报告</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+  <style>
+    :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
+    html, body { height: 100%; margin: 0; background: #000; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .swiper { height: 100%; }
+
+    .page { position: relative; width: 100%; height: 100%; overflow: hidden; background: #111; }
+    .bg { position: absolute; inset: 0; background-size: cover; background-position: center; transform: scale(1.02); }
+    .shade { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,.12) 40%, rgba(0,0,0,.35)); pointer-events: none; }
+
+    .content {
+      position: absolute; inset: 0;
+      padding: calc(16px + var(--safe-top)) 16px calc(16px + var(--safe-bottom)) 16px;
+      color: #fff;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    .title { font-size: 22px; font-weight: 800; letter-spacing: .5px; text-shadow: 0 2px 10px rgba(0,0,0,.35); }
+    .subtitle { font-size: 14px; opacity: .9; text-shadow: 0 2px 10px rgba(0,0,0,.35); line-height: 1.4; }
+
+    .card {
+      margin-top: auto;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 16px;
+      padding: 14px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .kv { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.14); }
+    .kv:last-child { border-bottom: none; }
+    .k { font-size: 13px; opacity: .85; }
+    .v { font-size: 14px; font-weight: 700; text-align: right; }
+
+    .fade-up { opacity: 0; transform: translateY(10px); transition: all .6s ease; }
+    .swiper-slide-active .fade-up { opacity: 1; transform: translateY(0); }
+
+    .pager {
+      position: absolute; right: 12px; top: calc(12px + var(--safe-top));
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.18);
+      color: rgba(255,255,255,.92);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="swiper">
+    <div class="swiper-wrapper" id="slides"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script>
+    // 先做占位。下一步我们会改成 fetch('./data/data.json') 动态渲染
+    const pages = [
+      { p: 1, title: "兔妈和八爸的年度聊天记录报告", subtitle: "向左滑动，开始回忆这一年。", kv: [["年度","2025"],["角色","兔妈 × 八爸"]] },
+      { p: 2, title: "第一次聊天", subtitle: "第一句话时间 / 当天聊到多久 / 当天消息数 / 双方第一句", kv: [["第一句话时间","—"],["当天消息数","—"]] },
+      { p: 3, title: "还记得我们一起分享的歌吗？", subtitle: "照片 / 视频 / 通话次数", kv: [["照片","—"],["视频","—"],["通话","—"]] },
+      { p: 4, title: "全年总量与峰值", subtitle: "总消息、总字数、峰值月份、日均强度", kv: [["总消息","—"],["总字数","—"],["峰值月份","—"]] },
+      { p: 5, title: "发送者与内容占比", subtitle: "兔妈占比 / 文本占比 / 表情占比", kv: [["兔妈消息","—"],["文本占比","—"],["表情占比","—"]] },
+      { p: 6, title: "小时分布", subtitle: "这一年我们最常在几点发消息？", kv: [["Top 小时","—"]] },
+      { p: 7, title: "聊天最多的一天", subtitle: "日峰值 + 强度", kv: [["日期","—"],["当日消息","—"],["每分钟","—"]] },
+      { p: 8, title: "聊天最多的月份", subtitle: "月峰值 + 5-12 月均", kv: [["峰值月份","—"],["5-12 月均","—"]] },
+      { p: 9, title: "深夜聊天", subtitle: "我们几点还在聊天，已经很晚了", kv: [["最晚时间","—"]] },
+      { p: 10, title: "连续聊天 & 表情偏好", subtitle: "聊天天数 / 表情总量 / 最爱表情“系列”", kv: [["聊天天数","—"],["表情总量","—"],["她最爱系列","—"],["我最爱系列","—"]] },
+      { p: 11, title: "高频词条", subtitle: "Top 词 / 总词频 / 贡献者 / 分类统计", kv: [["Top 词","—"],["总词频","—"],["贡献最多","—"]] },
+      { p: 12, title: "词云", subtitle: "词云将在这里叠加（背景留白）", kv: [["词云","待接入"]] },
+      { p: 13, title: "总结了！", subtitle: "年度回忆收束文案", kv: [["谢谢","兔妈 × 八爸"]] },
+    ];
+
+    const slidesEl = document.getElementById("slides");
+    const pad2 = n => String(n).padStart(2,"0");
+
+    pages.forEach(pg => {
+      const slide = document.createElement("div");
+      slide.className = "swiper-slide page";
+      slide.innerHTML = `
+        <div class="bg" style="background-image:url('./img/p${pad2(pg.p)}.jpg')"></div>
+        <div class="shade"></div>
+        <div class="pager">${pg.p} / 13</div>
+
+        <div class="content">
+          <div class="fade-up">
+            <div class="title">${pg.title}</div>
+            <div class="subtitle">${pg.subtitle}</div>
+          </div>
+
+          <div class="card fade-up">
+            ${pg.kv.map(([k,v]) => `
+              <div class="kv">
+                <div class="k">${k}</div>
+                <div class="v">${v}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+      slidesEl.appendChild(slide);
+    });
+
+    new Swiper('.swiper', { direction: 'horizontal', slidesPerView: 1, speed: 500, resistanceRatio: 0.6 });
+  </script>
+</body>
+</html>
