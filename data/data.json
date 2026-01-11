@@ -143,16 +143,17 @@
         "id": 12,
         "type": "wordcloud",
         "title": "词云",
-        "subtitle": "把我们说过的话，做成一团温柔的云。",
-        "kv": [
-          { "k": "词云", "v": "（此页将用词频渲染）" }
-        ],
-        "wordcloud": [
+        "subtitle": "把我们这一年说过的话，做成一团温柔的云。",
+        "words": [
           { "name": "想你", "value": 120 },
           { "name": "哈哈哈", "value": 98 },
-          { "name": "晚安", "value": 76 }
+          { "name": "晚安", "value": 76 },
+          { "name": "在干嘛", "value": 64 },
+          { "name": "吃饭了吗", "value": 52 },
+          { "name": "早点睡", "value": 47 }
         ]
-      },
+      }
+      ,
       {
         "id": 13,
         "type": "summary",
