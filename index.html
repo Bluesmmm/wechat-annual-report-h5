@@ -212,27 +212,144 @@
       fill: rgba(255,255,255,.92);
       pointer-events: none;
     }
+
+    /* Password overlay */
+    .password-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .password-overlay.hidden {
+      display: none;
+    }
+    .password-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .password-subtitle {
+      font-size: 13px;
+      opacity: .7;
+      color: #fff;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .password-input {
+      width: 100%;
+      max-width: 200px;
+      padding: 14px 20px;
+      font-size: 18px;
+      text-align: center;
+      background: rgba(255,255,255,.1);
+      border: 1.5px solid rgba(255,255,255,.2);
+      border-radius: 12px;
+      color: #fff;
+      outline: none;
+      letter-spacing: 2px;
+      box-sizing: border-box;
+    }
+    .password-input::placeholder {
+      color: rgba(255,255,255,.4);
+      letter-spacing: 0;
+    }
+    .password-input:focus {
+      border-color: rgba(255,255,255,.4);
+      background: rgba(255,255,255,.15);
+    }
+    .password-error {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #ff6b6b;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .password-error.show {
+      opacity: 1;
+    }
+    .main-content {
+      opacity: 0;
+      transition: opacity .5s;
+    }
+    .main-content.visible {
+      opacity: 1;
+    }
   </style>
 </head>
 
 <body>
-  <div class="swiper">
-    <div class="swiper-wrapper" id="slides"></div>
+  <!-- Password Overlay -->
+  <div class="password-overlay" id="passwordOverlay">
+    <div class="password-title">请输入密码</div>
+    <div class="password-subtitle">查看年度聊天记录报告</div>
+    <input type="text" class="password-input" id="passwordInput" placeholder="••••••" autocomplete="off" inputmode="decimal">
+    <div class="password-error" id="passwordError">密码错误，请重试</div>
   </div>
 
-  <!-- Background Music -->
-  <audio id="bgMusic" loop autoplay>
-    <source src="./music/bgm.mp3" type="audio/mpeg">
-  </audio>
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+    <div class="swiper">
+      <div class="swiper-wrapper" id="slides"></div>
+    </div>
 
-  <!-- Music Control Button -->
-  <div class="music-btn paused" id="musicBtn">
-    <svg class="music-icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    <!-- Background Music -->
+    <audio id="bgMusic" loop autoplay>
+      <source src="./music/bgm.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Music Control Button -->
+    <div class="music-btn paused" id="musicBtn">
+      <svg class="music-icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
   <script>
+    // Password Protection
+    const CORRECT_PASSWORD = '1314.22';
+    const passwordOverlay = document.getElementById('passwordOverlay');
+    const passwordInput = document.getElementById('passwordInput');
+    const passwordError = document.getElementById('passwordError');
+    const mainContent = document.getElementById('mainContent');
+
+    function checkPassword() {
+      const input = passwordInput.value.trim();
+      if (input === CORRECT_PASSWORD) {
+        // Correct password
+        passwordOverlay.classList.add('hidden');
+        mainContent.classList.add('visible');
+        // Start the app
+        main();
+      } else {
+        // Wrong password
+        passwordError.classList.add('show');
+        passwordInput.value = '';
+        passwordInput.focus();
+        // Remove error after 2 seconds
+        setTimeout(() => {
+          passwordError.classList.remove('show');
+        }, 2000);
+      }
+    }
+
+    // Handle Enter key
+    passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        checkPassword();
+      }
+    });
+
+    // Focus input on load
+    passwordInput.focus();
+
     async function main() {
       const res = await fetch('./data/data.json', { cache: 'no-store' });
       if (!res.ok) throw new Error('fetch data.json failed: ' + res.status);
@@ -607,11 +724,6 @@
         document.addEventListener('click', startMusicOnInteraction, { once: true });
       });
     }
-
-    main().catch(err => {
-      console.error(err);
-      alert("加载 data.json 失败：请确认 data/data.json 已提交到仓库，并通过 GitHub Pages 打开（不要用 file:// 方式直接打开）。");
-    });
   </script>
 </body>
 </html>
