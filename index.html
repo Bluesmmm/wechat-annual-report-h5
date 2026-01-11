@@ -328,7 +328,10 @@
         passwordOverlay.classList.add('hidden');
         mainContent.classList.add('visible');
         // Start the app
-        main();
+        main().catch(err => {
+          console.error('Main function error:', err);
+          alert('加载失败: ' + err.message);
+        });
       } else {
         // Wrong password
         passwordError.classList.add('show');
@@ -352,12 +355,17 @@
     passwordInput.focus();
 
     async function main() {
+      console.log('[Main] Starting...');
+
       const res = await fetch('./data/data.json', { cache: 'no-store' });
       if (!res.ok) throw new Error('fetch data.json failed: ' + res.status);
       const data = await res.json();
       const pages = data.pages || [];
 
+      console.log('[Main] Pages loaded:', pages.length);
+
       const slidesEl = document.getElementById("slides");
+      console.log('[Main] Slides element:', slidesEl);
       const pad2 = n => String(n).padStart(2, "0");
 
       // Render slides
