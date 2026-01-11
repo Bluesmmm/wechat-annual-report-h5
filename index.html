@@ -174,27 +174,33 @@
 
     /* music button */
     .music-btn {
-      position: absolute;
+      position: fixed;
       left: 12px;
-      top: calc(12px + var(--safe-top));
+      top: 50%;
+      transform: translateY(-50%);
       width: 36px;
       height: 36px;
       background: rgba(0,0,0,.45);
       border: 1px solid rgba(255,255,255,.18);
       border-radius: 50%;
-      cursor: pointer;
+      cursor: move;
       z-index: 100;
       display: flex;
       align-items: center;
       justify-content: center;
       backdrop-filter: blur(10px);
-      transition: transform .3s ease;
+      touch-action: none;
+      user-select: none;
     }
-    .music-btn.playing {
+    .music-btn.playing svg {
       animation: rotate 3s linear infinite;
     }
-    .music-btn.paused {
+    .music-btn.paused svg {
       animation-play-state: paused;
+    }
+    .music-btn.dragging {
+      transition: none;
+      opacity: .8;
     }
     @keyframes rotate {
       from { transform: rotate(0deg); }
@@ -204,6 +210,7 @@
       width: 18px;
       height: 18px;
       fill: rgba(255,255,255,.92);
+      pointer-events: none;
     }
   </style>
 </head>
@@ -220,7 +227,7 @@
 
   <!-- Music Control Button -->
   <div class="music-btn paused" id="musicBtn">
-    <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    <svg class="music-icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
@@ -480,8 +487,87 @@
       const musicBtn = document.getElementById('musicBtn');
       let musicStarted = false;
 
-      // Toggle music on button click
-      musicBtn.addEventListener('click', () => {
+      // Draggable functionality
+      let isDragging = false;
+      let dragStartX, dragStartY;
+      let btnStartX, btnStartY;
+      let hasMoved = false;
+
+      const handleDragStart = (clientX, clientY) => {
+        isDragging = true;
+        hasMoved = false;
+        dragStartX = clientX;
+        dragStartY = clientY;
+        const rect = musicBtn.getBoundingClientRect();
+        btnStartX = rect.left;
+        btnStartY = rect.top;
+        musicBtn.classList.add('dragging');
+      };
+
+      const handleDragMove = (clientX, clientY) => {
+        if (!isDragging) return;
+
+        const deltaX = clientX - dragStartX;
+        const deltaY = clientY - dragStartY;
+
+        // Check if moved significantly (to distinguish from click)
+        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+          hasMoved = true;
+        }
+
+        // Calculate new position
+        let newX = btnStartX + deltaX;
+        let newY = btnStartY + deltaY;
+
+        // Constrain to viewport
+        const maxX = window.innerWidth - musicBtn.offsetWidth;
+        const maxY = window.innerHeight - musicBtn.offsetHeight;
+
+        newX = Math.max(0, Math.min(newX, maxX));
+        newY = Math.max(0, Math.min(newY, maxY));
+
+        musicBtn.style.left = newX + 'px';
+        musicBtn.style.top = newY + 'px';
+      };
+
+      const handleDragEnd = () => {
+        isDragging = false;
+        musicBtn.classList.remove('dragging');
+      };
+
+      // Touch events
+      musicBtn.addEventListener('touchstart', (e) => {
+        handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+
+      musicBtn.addEventListener('touchmove', (e) => {
+        handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+
+      musicBtn.addEventListener('touchend', () => {
+        handleDragEnd();
+      });
+
+      // Mouse events
+      musicBtn.addEventListener('mousedown', (e) => {
+        handleDragStart(e.clientX, e.clientY);
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        handleDragMove(e.clientX, e.clientY);
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          handleDragEnd();
+        }
+      });
+
+      // Toggle music on button click (only if not dragged)
+      musicBtn.addEventListener('click', (e) => {
+        if (hasMoved) return; // Don't toggle if was dragging
+
         if (bgMusic.paused) {
           bgMusic.play();
           musicBtn.classList.remove('paused');
