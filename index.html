@@ -321,6 +321,7 @@
               animateBarsForActive();
               animateCountersForActive();
               animateMiniChartForActive();
+              if (document.querySelector('.swiper-slide-active .wordcloud')) initWordcloud();
             });
           },
           slideChangeTransitionEnd() {
