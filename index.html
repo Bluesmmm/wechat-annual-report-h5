@@ -276,6 +276,8 @@
       opacity: 1;
     }
     .main-content {
+      position: absolute;
+      inset: 0;
       opacity: 0;
       transition: opacity .5s;
     }
@@ -366,10 +368,12 @@
 
       const slidesEl = document.getElementById("slides");
       console.log('[Main] Slides element:', slidesEl);
+      console.log('[Main] First page data:', pages[0]);
       const pad2 = n => String(n).padStart(2, "0");
 
       // Render slides
-      pages.forEach(pg => {
+      console.log('[Main] Starting to render slides...');
+      pages.forEach((pg, idx) => {
         const slide = document.createElement("div");
         slide.className = "swiper-slide page";
 
@@ -469,7 +473,10 @@
         `;
 
         slidesEl.appendChild(slide);
+        console.log(`[Main] Slide ${idx + 1} rendered, total slides: ${slidesEl.children.length}`);
       });
+
+      console.log('[Main] All slides rendered, total:', slidesEl.children.length);
 
       let wordcloudInited = false;
 
@@ -585,6 +592,7 @@
       }
 
       // Swiper init
+      console.log('[Main] Initializing Swiper...');
       const swiper = new Swiper('.swiper', {
         direction: 'horizontal',
         slidesPerView: 1,
@@ -592,6 +600,7 @@
         resistanceRatio: 0.6,
         on: {
           init() {
+            console.log('[Swiper] Initialized, active slide:', this.activeIndex);
             requestAnimationFrame(() => {
               animateBarsForActive();
               animateCountersForActive();
