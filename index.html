@@ -36,6 +36,7 @@
       -webkit-backdrop-filter: blur(10px);
       box-shadow: 0 10px 30px rgba(0,0,0,.25);
     }
+
     .kv { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.14); }
     .kv:last-child { border-bottom: none; }
     .k { font-size: 13px; opacity: .85; }
@@ -54,24 +55,53 @@
       font-size: 12px;
       backdrop-filter: blur(10px);
     }
+
+    /* progress bars (page 5 etc.) */
     .bars { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
     .bar-row { display: grid; grid-template-columns: 76px 1fr 44px; gap: 10px; align-items: center; }
     .bar-label { font-size: 12px; opacity: .9; }
     .bar-track {
-    height: 10px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.18);
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,.14);
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.18);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.14);
     }
     .bar-fill {
-    height: 100%;
-    width: 0%;
-    border-radius: 999px;
-    background: rgba(255,255,255,.85);
-    transition: width 900ms ease;
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: rgba(255,255,255,.85);
+      transition: width 900ms ease;
     }
     .bar-val { font-size: 12px; font-weight: 800; text-align: right; }
+
+    /* counters (page 4 etc.) */
+    .counters { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .counter-row { display: flex; justify-content: space-between; align-items: baseline; padding-top: 6px; }
+    .counter-label { font-size: 12px; opacity: .9; }
+    .counter-value { font-size: 20px; font-weight: 900; letter-spacing: .2px; }
+    .counter-suffix { font-size: 12px; opacity: .9; margin-left: 4px; font-weight: 700; }
+
+    /* mini bar chart (page 6 hourTop) */
+    .mini-chart { margin-top: 12px; }
+    .mini-chart-title { font-size: 12px; opacity: .9; margin-bottom: 8px; }
+    .mini-bars { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
+    .mini-bar {
+      flex: 1;
+      background: rgba(255,255,255,.75);
+      border-radius: 8px 8px 4px 4px;
+      height: 4px; /* initial */
+      transform-origin: bottom;
+      transition: height 900ms ease;
+    }
+    .mini-bar-labels { display: flex; gap: 6px; margin-top: 6px; }
+    .mini-bar-label {
+      flex: 1;
+      text-align: center;
+      font-size: 10px;
+      opacity: .8;
+    }
   </style>
 </head>
 
@@ -81,93 +111,179 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
   <script>
     async function main() {
       const res = await fetch('./data/data.json', { cache: 'no-store' });
       if (!res.ok) throw new Error('fetch data.json failed: ' + res.status);
       const data = await res.json();
-      const pages = data.pages;
-  
+      const pages = data.pages || [];
+
       const slidesEl = document.getElementById("slides");
       const pad2 = n => String(n).padStart(2, "0");
-  
+
+      // Render slides
       pages.forEach(pg => {
         const slide = document.createElement("div");
         slide.className = "swiper-slide page";
-  
-        if (pg.id === 5) console.log("page5 bars =", pg.bars);
 
         const kvHtml = (pg.kv || []).map(item => `
           <div class="kv">
-            <div class="k">${item.k}</div>
-            <div class="v">${item.v}</div>
+            <div class="k">${item.k ?? ""}</div>
+            <div class="v">${item.v ?? ""}</div>
           </div>
         `).join("");
-        
+
         const barsHtml = (pg.bars && pg.bars.length) ? `
-            <div class="bars">
-                ${pg.bars.map((b, idx) => `
-                <div class="bar-row">
-                    <div class="bar-label">${b.label}</div>
-                    <div class="bar-track">
-                    <div class="bar-fill" data-bar="${pg.id}" data-idx="${idx}" data-value="${b.value}"></div>
-                    </div>
-                    <div class="bar-val">${b.value}%</div>
+          <div class="bars">
+            ${pg.bars.map(b => `
+              <div class="bar-row">
+                <div class="bar-label">${b.label ?? ""}</div>
+                <div class="bar-track">
+                  <div class="bar-fill" data-value="${Number(b.value || 0)}"></div>
                 </div>
-                `).join("")}
+                <div class="bar-val">${Number(b.value || 0)}%</div>
+              </div>
+            `).join("")}
+          </div>
+        ` : "";
+
+        const countersHtml = (pg.counters && pg.counters.length) ? `
+          <div class="counters">
+            ${pg.counters.map(c => `
+              <div class="counter-row">
+                <div class="counter-label">${c.label ?? ""}</div>
+                <div class="counter-value">
+                  <span class="count-num" data-value="${Number(c.value || 0)}">0</span>
+                  <span class="counter-suffix">${c.suffix ?? ""}</span>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        ` : "";
+
+        const hourChartHtml = (pg.hourTop && pg.hourTop.length) ? `
+          <div class="mini-chart">
+            <div class="mini-chart-title">Top 时段分布</div>
+            <div class="mini-bars">
+              ${pg.hourTop.map(h => `
+                <div class="mini-bar" data-hvalue="${Number(h.count || 0)}"></div>
+              `).join("")}
             </div>
-            ` : "";
+            <div class="mini-bar-labels">
+              ${pg.hourTop.map(h => `
+                <div class="mini-bar-label">${String(h.hour).padStart(2,'0')}点</div>
+              `).join("")}
+            </div>
+          </div>
+        ` : "";
 
         slide.innerHTML = `
           <div class="bg" style="background-image:url('./img/p${pad2(pg.id)}.jpg')"></div>
           <div class="shade"></div>
           <div class="pager">${pg.id} / 13</div>
-  
+
           <div class="content">
             <div class="fade-up">
               <div class="title">${pg.title || ""}</div>
               <div class="subtitle">${pg.subtitle || ""}</div>
             </div>
-  
+
             <div class="card fade-up">
               ${kvHtml}
               ${barsHtml}
+              ${countersHtml}
+              ${hourChartHtml}
             </div>
           </div>
         `;
-  
+
         slidesEl.appendChild(slide);
       });
 
+      // Animations
       function animateBarsForActive() {
         const active = document.querySelector('.swiper-slide-active');
         if (!active) return;
+
         active.querySelectorAll('.bar-fill').forEach(el => {
-            const v = Number(el.dataset.value || 0);
-            // 先归零再触发，保证重复进入也能动
-            el.style.width = '0%';
-            requestAnimationFrame(() => {
+          const v = Number(el.dataset.value || 0);
+          el.style.width = '0%';
+          requestAnimationFrame(() => {
             el.style.width = Math.max(0, Math.min(100, v)) + '%';
-            });
+          });
         });
-        }
-  
+      }
+
+      function animateCountersForActive() {
+        const active = document.querySelector('.swiper-slide-active');
+        if (!active) return;
+
+        active.querySelectorAll('.count-num').forEach(el => {
+          const target = Number(el.dataset.value || 0);
+          const duration = 900;
+          const start = performance.now();
+
+          function tick(now) {
+            const t = Math.min(1, (now - start) / duration);
+            const val = Math.floor(target * t);
+            el.textContent = val.toLocaleString('zh-CN');
+            if (t < 1) requestAnimationFrame(tick);
+          }
+
+          el.textContent = "0";
+          requestAnimationFrame(tick);
+        });
+      }
+
+      function animateMiniChartForActive() {
+        const active = document.querySelector('.swiper-slide-active');
+        if (!active) return;
+
+        const bars = Array.from(active.querySelectorAll('.mini-bar'));
+        if (!bars.length) return;
+
+        const values = bars.map(b => Number(b.dataset.hvalue || 0));
+        const maxV = Math.max(1, ...values);
+
+        bars.forEach(b => {
+          const v = Number(b.dataset.hvalue || 0);
+          // 12px ~ 90px
+          const h = 12 + Math.round((v / maxV) * 78);
+          b.style.height = '4px';
+          requestAnimationFrame(() => {
+            b.style.height = h + 'px';
+          });
+        });
+      }
+
+      // Swiper init
       const swiper = new Swiper('.swiper', {
         direction: 'horizontal',
         slidesPerView: 1,
         speed: 500,
         resistanceRatio: 0.6,
         on: {
-            init() { requestAnimationFrame(() => animateBarsForActive()); },
-            slideChangeTransitionEnd() { animateBarsForActive(); }
+          init() {
+            requestAnimationFrame(() => {
+              animateBarsForActive();
+              animateCountersForActive();
+              animateMiniChartForActive();
+            });
+          },
+          slideChangeTransitionEnd() {
+            animateBarsForActive();
+            animateCountersForActive();
+            animateMiniChartForActive();
+          }
         }
-        });
+      });
     }
-  
+
     main().catch(err => {
       console.error(err);
       alert("加载 data.json 失败：请确认 data/data.json 已提交到仓库，并通过 GitHub Pages 打开（不要用 file:// 方式直接打开）。");
     });
-  </script>  
+  </script>
 </body>
 </html>
