@@ -54,6 +54,24 @@
       font-size: 12px;
       backdrop-filter: blur(10px);
     }
+    .bars { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .bar-row { display: grid; grid-template-columns: 76px 1fr 44px; gap: 10px; align-items: center; }
+    .bar-label { font-size: 12px; opacity: .9; }
+    .bar-track {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.18);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.14);
+    }
+    .bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: rgba(255,255,255,.85);
+    transition: width 900ms ease;
+    }
+    .bar-val { font-size: 12px; font-weight: 800; text-align: right; }
   </style>
 </head>
 
@@ -83,7 +101,21 @@
             <div class="v">${item.v}</div>
           </div>
         `).join("");
-  
+        
+        const barsHtml = (pg.bars && pg.bars.length) ? `
+            <div class="bars">
+                ${pg.bars.map((b, idx) => `
+                <div class="bar-row">
+                    <div class="bar-label">${b.label}</div>
+                    <div class="bar-track">
+                    <div class="bar-fill" data-bar="${pg.id}" data-idx="${idx}" data-value="${b.value}"></div>
+                    </div>
+                    <div class="bar-val">${b.value}%</div>
+                </div>
+                `).join("")}
+            </div>
+            ` : "";
+
         slide.innerHTML = `
           <div class="bg" style="background-image:url('./img/p${pad2(pg.id)}.jpg')"></div>
           <div class="shade"></div>
@@ -97,14 +129,37 @@
   
             <div class="card fade-up">
               ${kvHtml}
+              ${barsHtml}
             </div>
           </div>
         `;
   
         slidesEl.appendChild(slide);
       });
+
+      function animateBarsForActive() {
+        const active = document.querySelector('.swiper-slide-active');
+        if (!active) return;
+        active.querySelectorAll('.bar-fill').forEach(el => {
+            const v = Number(el.dataset.value || 0);
+            // 先归零再触发，保证重复进入也能动
+            el.style.width = '0%';
+            requestAnimationFrame(() => {
+            el.style.width = Math.max(0, Math.min(100, v)) + '%';
+            });
+        });
+        }
   
-      new Swiper('.swiper', { direction: 'horizontal', slidesPerView: 1, speed: 500, resistanceRatio: 0.6 });
+      const swiper = new Swiper('.swiper', {
+        direction: 'horizontal',
+        slidesPerView: 1,
+        speed: 500,
+        resistanceRatio: 0.6,
+        on: {
+            init() { requestAnimationFrame(() => animateBarsForActive()); },
+            slideChangeTransitionEnd() { animateBarsForActive(); }
+        }
+        });
     }
   
     main().catch(err => {
