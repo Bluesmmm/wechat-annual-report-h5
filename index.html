@@ -176,21 +176,22 @@
     .music-btn {
       position: fixed;
       left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 36px;
-      height: 36px;
-      background: rgba(0,0,0,.45);
-      border: 1px solid rgba(255,255,255,.18);
+      /* top will be set by JS for center positioning */
+      top: 0;
+      width: 44px;
+      height: 44px;
+      background: rgba(0,0,0,.55);
+      border: 1.5px solid rgba(255,255,255,.25);
       border-radius: 50%;
       cursor: move;
       z-index: 100;
       display: flex;
       align-items: center;
       justify-content: center;
-      backdrop-filter: blur(10px);
       touch-action: none;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
     .music-btn.playing svg {
       animation: rotate 3s linear infinite;
@@ -199,7 +200,7 @@
       animation-play-state: paused;
     }
     .music-btn.dragging {
-      transition: none;
+      transition: none !important;
       opacity: .8;
     }
     @keyframes rotate {
@@ -207,9 +208,9 @@
       to { transform: rotate(360deg); }
     }
     .music-btn svg {
-      width: 18px;
-      height: 18px;
-      fill: rgba(255,255,255,.92);
+      width: 20px;
+      height: 20px;
+      fill: rgba(255,255,255,.95);
       pointer-events: none;
     }
 
@@ -604,37 +605,54 @@
       const musicBtn = document.getElementById('musicBtn');
       let musicStarted = false;
 
+      // Initialize button position (left center)
+      const initBtnPosition = () => {
+        const btnHeight = musicBtn.offsetHeight;
+        const centerY = (window.innerHeight - btnHeight) / 2;
+        musicBtn.style.top = centerY + 'px';
+      };
+      initBtnPosition();
+
       // Draggable functionality
       let isDragging = false;
-      let dragStartX, dragStartY;
-      let btnStartX, btnStartY;
       let hasMoved = false;
+      let startX, startY;
+      let initialBtnX, initialBtnY;
 
-      const handleDragStart = (clientX, clientY) => {
+      const getClientPos = (e) => {
+        if (e.touches && e.touches.length > 0) {
+          return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+      };
+
+      const handleDragStart = (e) => {
+        const pos = getClientPos(e);
         isDragging = true;
         hasMoved = false;
-        dragStartX = clientX;
-        dragStartY = clientY;
-        const rect = musicBtn.getBoundingClientRect();
-        btnStartX = rect.left;
-        btnStartY = rect.top;
+        startX = pos.x;
+        startY = pos.y;
+        initialBtnX = musicBtn.offsetLeft;
+        initialBtnY = musicBtn.offsetTop;
         musicBtn.classList.add('dragging');
       };
 
-      const handleDragMove = (clientX, clientY) => {
+      const handleDragMove = (e) => {
         if (!isDragging) return;
+        e.preventDefault(); // Prevent scrolling on mobile
 
-        const deltaX = clientX - dragStartX;
-        const deltaY = clientY - dragStartY;
+        const pos = getClientPos(e);
+        const deltaX = pos.x - startX;
+        const deltaY = pos.y - startY;
 
         // Check if moved significantly (to distinguish from click)
-        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+        if (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8) {
           hasMoved = true;
         }
 
         // Calculate new position
-        let newX = btnStartX + deltaX;
-        let newY = btnStartY + deltaY;
+        let newX = initialBtnX + deltaX;
+        let newY = initialBtnY + deltaY;
 
         // Constrain to viewport
         const maxX = window.innerWidth - musicBtn.offsetWidth;
@@ -653,28 +671,14 @@
       };
 
       // Touch events
-      musicBtn.addEventListener('touchstart', (e) => {
-        handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
-      }, { passive: true });
-
-      musicBtn.addEventListener('touchmove', (e) => {
-        handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
-      }, { passive: true });
-
-      musicBtn.addEventListener('touchend', () => {
-        handleDragEnd();
-      });
+      musicBtn.addEventListener('touchstart', handleDragStart, { passive: false });
+      musicBtn.addEventListener('touchmove', handleDragMove, { passive: false });
+      musicBtn.addEventListener('touchend', handleDragEnd);
+      musicBtn.addEventListener('touchcancel', handleDragEnd);
 
       // Mouse events
-      musicBtn.addEventListener('mousedown', (e) => {
-        handleDragStart(e.clientX, e.clientY);
-        e.preventDefault();
-      });
-
-      document.addEventListener('mousemove', (e) => {
-        handleDragMove(e.clientX, e.clientY);
-      });
-
+      musicBtn.addEventListener('mousedown', handleDragStart);
+      document.addEventListener('mousemove', handleDragMove);
       document.addEventListener('mouseup', () => {
         if (isDragging) {
           handleDragEnd();
