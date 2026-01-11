@@ -95,6 +95,8 @@
         const slide = document.createElement("div");
         slide.className = "swiper-slide page";
   
+        if (pg.id === 5) console.log("page5 bars =", pg.bars);
+
         const kvHtml = (pg.kv || []).map(item => `
           <div class="kv">
             <div class="k">${item.k}</div>
