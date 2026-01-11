@@ -374,27 +374,27 @@
 
   <script>
     // Password Protection
-    let CORRECT_PASSWORD = '';  // Will be loaded from config.json
+    // Default password (used when config.json is not available)
+    let CORRECT_PASSWORD = '1314.22';
     const passwordOverlay = document.getElementById('passwordOverlay');
     const passwordInput = document.getElementById('passwordInput');
     const passwordError = document.getElementById('passwordError');
     const mainContent = document.getElementById('mainContent');
 
-    // Load password from config.json
+    // Load password from config.json (optional, for local development)
     async function loadConfig() {
       try {
         const res = await fetch('./config.json', { cache: 'no-store' });
         if (res.ok) {
           const config = await res.json();
-          CORRECT_PASSWORD = config.password || '';
-          return true;
+          if (config.password) {
+            CORRECT_PASSWORD = config.password;
+            console.log('Using password from config.json');
+          }
         }
       } catch (err) {
-        console.log('config.json not found, using default');
+        console.log('config.json not found, using default password');
       }
-      // Fallback to empty password if config.json not found
-      CORRECT_PASSWORD = '';
-      return false;
     }
 
     function checkPassword() {
@@ -421,9 +421,7 @@
     }
 
     // Initialize password on page load
-    loadConfig().then(() => {
-      console.log('Config loaded, password protected:', !!CORRECT_PASSWORD);
-    });
+    loadConfig();
 
     // Handle Enter key
     passwordInput.addEventListener('keydown', (e) => {
