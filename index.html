@@ -374,11 +374,28 @@
 
   <script>
     // Password Protection
-    const CORRECT_PASSWORD = '1314.22';
+    let CORRECT_PASSWORD = '';  // Will be loaded from config.json
     const passwordOverlay = document.getElementById('passwordOverlay');
     const passwordInput = document.getElementById('passwordInput');
     const passwordError = document.getElementById('passwordError');
     const mainContent = document.getElementById('mainContent');
+
+    // Load password from config.json
+    async function loadConfig() {
+      try {
+        const res = await fetch('./config.json', { cache: 'no-store' });
+        if (res.ok) {
+          const config = await res.json();
+          CORRECT_PASSWORD = config.password || '';
+          return true;
+        }
+      } catch (err) {
+        console.log('config.json not found, using default');
+      }
+      // Fallback to empty password if config.json not found
+      CORRECT_PASSWORD = '';
+      return false;
+    }
 
     function checkPassword() {
       const input = passwordInput.value.trim();
@@ -402,6 +419,11 @@
         }, 2000);
       }
     }
+
+    // Initialize password on page load
+    loadConfig().then(() => {
+      console.log('Config loaded, password protected:', !!CORRECT_PASSWORD);
+    });
 
     // Handle Enter key
     passwordInput.addEventListener('keydown', (e) => {
