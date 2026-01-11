@@ -214,7 +214,7 @@
   </div>
 
   <!-- Background Music -->
-  <audio id="bgMusic" loop>
+  <audio id="bgMusic" loop autoplay>
     <source src="./music/bgm.mp3" type="audio/mpeg">
   </audio>
 
@@ -508,8 +508,18 @@
         }
       };
 
-      document.addEventListener('touchstart', startMusicOnInteraction, { once: true });
-      document.addEventListener('click', startMusicOnInteraction, { once: true });
+      // Try autoplay immediately
+      bgMusic.play().then(() => {
+        musicStarted = true;
+        musicBtn.classList.remove('paused');
+        musicBtn.classList.add('playing');
+        console.log('Music autoplay started');
+      }).catch(err => {
+        console.log('Autoplay prevented, waiting for user interaction:', err);
+        // Fallback: start on first interaction
+        document.addEventListener('touchstart', startMusicOnInteraction, { once: true });
+        document.addEventListener('click', startMusicOnInteraction, { once: true });
+      });
     }
 
     main().catch(err => {
