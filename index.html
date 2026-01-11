@@ -227,10 +227,19 @@
         function initWordcloud() {
         if (wordcloudInited) return;
         const el = document.querySelector('.swiper-slide-active .wordcloud');
-        if (!el) return;
+        if (!el) {
+            console.log('[Wordcloud] Container not found');
+            return;
+        }
 
         const wcPage = pages.find(p => p.id === 12);
-        if (!wcPage || !wcPage.words) return;
+        if (!wcPage || !wcPage.words) {
+            console.log('[Wordcloud] Page or words data not found');
+            return;
+        }
+
+        console.log('[Wordcloud] Initializing...', wcPage.words);
+        console.log('[Wordcloud] Container size:', el.offsetWidth, 'x', el.offsetHeight);
 
         // Dispose existing chart if any
         if (el.getAttribute('_echarts_instance_')) {
@@ -238,6 +247,7 @@
         }
 
         const chart = echarts.init(el);
+        console.log('[Wordcloud] Chart instance created');
         chart.setOption({
             backgroundColor: 'transparent',
             series: [{
