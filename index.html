@@ -174,6 +174,56 @@
         height: 100%;
     }
 
+    /* Four-grid gallery (page 3) */
+    .four-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+      aspect-ratio: 1;
+    }
+    .grid-item {
+      position: relative;
+      background: rgba(255,255,255,.08);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .grid-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .grid-item .placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(255,255,255,.06);
+    }
+    .grid-item .placeholder-icon {
+      font-size: 28px;
+      opacity: .7;
+    }
+    .grid-item .placeholder-text {
+      font-size: 11px;
+      opacity: .6;
+    }
+    .grid-item .label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 6px 8px;
+      background: linear-gradient(to top, rgba(0,0,0,.7), transparent);
+      font-size: 10px;
+      opacity: .9;
+    }
+
     /* Page 2 special kv layout for long text */
     .page-2 .kv {
       flex-direction: column;
@@ -649,6 +699,25 @@
           </div>
         ` : "";
 
+        // Four-grid gallery (page 3)
+        const fourGridHtml = (pg.id === 3 && pg.fourGrid && pg.fourGrid.length) ? `
+          <div class="four-grid">
+            ${pg.fourGrid.map(item => `
+              <div class="grid-item">
+                ${item.image ? `
+                  <img src="${item.image}" alt="${item.label || ''}" loading="lazy">
+                  ${item.label ? `<div class="label">${item.label}</div>` : ''}
+                ` : `
+                  <div class="placeholder">
+                    <div class="placeholder-icon">${item.icon || '📷'}</div>
+                    <div class="placeholder-text">${item.label || ''}</div>
+                  </div>
+                `}
+              </div>
+            `).join("")}
+          </div>
+        ` : "";
+
         // Chat preview (page 2)
         console.log('[Page', pg.id, '] firstMessages:', pg.firstMessages);
         const chatPreviewHtml = (pg.id === 2 && pg.firstMessages && pg.firstMessages.length) ? `
@@ -710,6 +779,7 @@
             </div>
 
             <div class="card fade-up ${isCover ? 'fade-up-2' : ''}">
+              ${fourGridHtml}
               ${chatPreviewHtml}
               ${comparisonHtml}
               ${kvHtml}
