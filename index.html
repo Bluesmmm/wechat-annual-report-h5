@@ -181,7 +181,8 @@
       grid-template-rows: 1fr 1fr;
       gap: 8px;
       margin-top: 12px;
-      aspect-ratio: 1;
+      height: 180px;
+      flex-shrink: 0;
     }
     .grid-item {
       position: relative;
@@ -189,11 +190,18 @@
       border-radius: 12px;
       overflow: hidden;
       border: 1px solid rgba(255,255,255,.12);
+      cursor: pointer;
+      transition: transform .2s, border-color .2s;
+    }
+    .grid-item:active {
+      transform: scale(.96);
+      border-color: rgba(255,255,255,.3);
     }
     .grid-item img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      pointer-events: none;
     }
     .grid-item .placeholder {
       width: 100%;
@@ -206,11 +214,11 @@
       background: rgba(255,255,255,.06);
     }
     .grid-item .placeholder-icon {
-      font-size: 28px;
+      font-size: 24px;
       opacity: .7;
     }
     .grid-item .placeholder-text {
-      font-size: 11px;
+      font-size: 10px;
       opacity: .6;
     }
     .grid-item .label {
@@ -218,10 +226,54 @@
       bottom: 0;
       left: 0;
       right: 0;
-      padding: 6px 8px;
+      padding: 4px 8px;
       background: linear-gradient(to top, rgba(0,0,0,.7), transparent);
       font-size: 10px;
       opacity: .9;
+      pointer-events: none;
+    }
+
+    /* Image lightbox modal */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.9);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .lightbox.show {
+      display: flex;
+      opacity: 1;
+    }
+    .lightbox img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #fff;
+      cursor: pointer;
+    }
+    .lightbox-close:active {
+      background: rgba(255,255,255,.25);
     }
 
     /* Page 2 special kv layout for long text */
@@ -537,6 +589,12 @@
     <!-- Music Control Button -->
     <div class="music-btn paused" id="musicBtn">
       <svg class="music-icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    </div>
+
+    <!-- Image Lightbox -->
+    <div class="lightbox" id="lightbox">
+      <div class="lightbox-close" id="lightboxClose">×</div>
+      <img src="" alt="" id="lightboxImg">
     </div>
   </div>
 
@@ -1063,6 +1121,34 @@
         // Fallback: start on first interaction
         document.addEventListener('touchstart', startMusicOnInteraction, { once: true });
         document.addEventListener('click', startMusicOnInteraction, { once: true });
+      });
+
+      // Lightbox functionality for four-grid images
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightboxImg');
+      const lightboxClose = document.getElementById('lightboxClose');
+
+      // Add click handlers to grid items (using event delegation)
+      document.addEventListener('click', (e) => {
+        const gridItem = e.target.closest('.grid-item');
+        if (gridItem) {
+          const img = gridItem.querySelector('img');
+          if (img && img.src) {
+            lightboxImg.src = img.src;
+            lightbox.classList.add('show');
+          }
+        }
+      });
+
+      // Close lightbox
+      lightboxClose.addEventListener('click', () => {
+        lightbox.classList.remove('show');
+      });
+
+      lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) {
+          lightbox.classList.remove('show');
+        }
       });
     }
   </script>
