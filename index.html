@@ -622,6 +622,7 @@
         ` : "";
 
         // Chat preview (page 2)
+        console.log('[Page', pg.id, '] firstMessages:', pg.firstMessages);
         const chatPreviewHtml = (pg.id === 2 && pg.firstMessages && pg.firstMessages.length) ? `
           <div class="chat-preview">
             <div class="chat-bubbles">
@@ -636,6 +637,7 @@
         ` : "";
 
         // Comparison list (page 2)
+        console.log('[Page', pg.id, '] comparison:', pg.comparison);
         const comparisonHtml = (pg.id === 2 && pg.comparison) ? `
           <div class="comparison">
             <div class="comp-section then">
@@ -662,6 +664,11 @@
             </div>
           </div>
         ` : "";
+
+        if (pg.id === 2) {
+          console.log('[Page 2] chatPreviewHtml:', chatPreviewHtml);
+          console.log('[Page 2] comparisonHtml:', comparisonHtml);
+        }
 
         slide.innerHTML = `
           <div class="bg" style="background-image:url('./img/p${pad2(pg.id)}.jpg')"></div>
