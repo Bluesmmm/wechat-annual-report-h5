@@ -88,8 +88,6 @@
     .fade-up-3 { transition-delay: 0.3s; }
 
     .card {
-      flex: 1;
-      min-height: 0;
       background: rgba(255,255,255,.12);
       border: 1px solid rgba(255,255,255,.18);
       border-radius: 16px;
@@ -97,7 +95,15 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .page:not(.page-cover) .card {
+      flex: 1;
+      min-height: 0;
+      margin-top: 12px;
       overflow-y: auto;
+    }
+    .page-cover .card {
+      margin-top: 0;
     }
 
     .kv { display: flex; flex-direction: column; gap: 4px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.14); }
