@@ -174,6 +174,99 @@
         height: 100%;
     }
 
+    /* Chat bubbles (page 2) */
+    .chat-preview {
+      margin-top: 12px;
+    }
+    .chat-bubbles {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .chat-bubble {
+      max-width: 75%;
+      padding: 10px 13px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.4;
+      position: relative;
+    }
+    .chat-bubble.left {
+      align-self: flex-start;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.25);
+      border-bottom-left-radius: 4px;
+    }
+    .chat-bubble.right {
+      align-self: flex-end;
+      background: rgba(95,184,120,.85);
+      border-bottom-right-radius: 4px;
+      color: #fff;
+    }
+    .chat-bubble .sender {
+      font-size: 11px;
+      opacity: .7;
+      margin-bottom: 4px;
+    }
+    .chat-bubble.left .sender { color: rgba(255,255,255,.8); }
+    .chat-bubble.right .sender { color: rgba(255,255,255,.9); }
+
+    /* Comparison list (page 2) */
+    .comparison {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .comp-section {
+      background: rgba(255,255,255,.06);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .comp-header {
+      font-size: 12px;
+      opacity: .7;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .comp-items {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .comp-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .comp-check {
+      width: 16px;
+      height: 16px;
+      background: rgba(255,255,255,.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .comp-section.then .comp-check::before {
+      content: '✓';
+      font-size: 10px;
+      color: rgba(255,255,255,.7);
+    }
+    .comp-section.now .comp-check {
+      background: rgba(95,184,120,.7);
+    }
+    .comp-section.now .comp-check::before {
+      content: '♥';
+      font-size: 10px;
+      color: #fff;
+    }
+
     /* topWords list (page 11) */
     .topwords-list {
       margin-top: 12px;
@@ -528,6 +621,48 @@
           </div>
         ` : "";
 
+        // Chat preview (page 2)
+        const chatPreviewHtml = (pg.id === 2 && pg.firstMessages && pg.firstMessages.length) ? `
+          <div class="chat-preview">
+            <div class="chat-bubbles">
+              ${pg.firstMessages.map(msg => `
+                <div class="chat-bubble ${msg.side === 'left' ? 'left' : 'right'}">
+                  <div class="sender">${msg.sender ?? ""}</div>
+                  <div class="text">${msg.text ?? ""}</div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        ` : "";
+
+        // Comparison list (page 2)
+        const comparisonHtml = (pg.id === 2 && pg.comparison) ? `
+          <div class="comparison">
+            <div class="comp-section then">
+              <div class="comp-header">那天我们</div>
+              <div class="comp-items">
+                ${(pg.comparison.then || []).map(item => `
+                  <div class="comp-item">
+                    <div class="comp-check"></div>
+                    <span>${item ?? ""}</span>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+            <div class="comp-section now">
+              <div class="comp-header">现在我们</div>
+              <div class="comp-items">
+                ${(pg.comparison.now || []).map(item => `
+                  <div class="comp-item">
+                    <div class="comp-check"></div>
+                    <span>${item ?? ""}</span>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          </div>
+        ` : "";
+
         slide.innerHTML = `
           <div class="bg" style="background-image:url('./img/p${pad2(pg.id)}.jpg')"></div>
           <div class="shade"></div>
@@ -540,6 +675,8 @@
             </div>
 
             <div class="card fade-up ${isCover ? 'fade-up-2' : ''}">
+              ${chatPreviewHtml}
+              ${comparisonHtml}
               ${kvHtml}
               ${barsHtml}
               ${countersHtml}
