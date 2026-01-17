@@ -176,12 +176,10 @@
 
     /* Four-grid gallery (page 3) */
     .four-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
+      display: flex;
+      flex-direction: column;
       gap: 10px;
       margin-top: 4px;
-      height: min(45vh, 320px);
       flex-shrink: 0;
     }
     .grid-item {
@@ -192,6 +190,8 @@
       border: 1px solid rgba(255,255,255,.15);
       cursor: pointer;
       transition: transform .2s, border-color .2s;
+      height: 100px;
+      flex-shrink: 0;
     }
     .grid-item:active {
       transform: scale(.97);
