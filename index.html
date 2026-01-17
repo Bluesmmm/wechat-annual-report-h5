@@ -176,8 +176,8 @@
 
     /* Four-grid gallery (page 3) */
     .four-grid {
-      display: flex;
-      flex-direction: column;
+      display: flex !important;
+      flex-direction: column !important;
       gap: 10px;
       margin-top: 4px;
       flex-shrink: 0;
@@ -192,6 +192,7 @@
       transition: transform .2s, border-color .2s;
       height: 100px;
       flex-shrink: 0;
+      width: 100%;
     }
     .grid-item:active {
       transform: scale(.97);
