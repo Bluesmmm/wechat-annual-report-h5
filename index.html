@@ -156,9 +156,11 @@
     /* counters (page 4 etc.) */
     .counters { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
     .counter-row { display: flex; justify-content: space-between; align-items: baseline; padding-top: 6px; }
+    .counter-row.has-note { flex-direction: column; align-items: flex-start; }
     .counter-label { font-size: 12px; opacity: .9; }
     .counter-value { font-size: 20px; font-weight: 900; letter-spacing: .2px; }
     .counter-suffix { font-size: 12px; opacity: .9; margin-left: 4px; font-weight: 700; }
+    .counter-note { font-size: 11px; opacity: 0.6; margin-top: 4px; line-height: 1.4; }
 
     /* aside (page 4 etc.) */
     .aside {
@@ -191,6 +193,69 @@
       font-size: 10px;
       opacity: .8;
     }
+
+    /* monthly breakdown bar chart (page 4) */
+    .monthly-breakdown { margin-top: 16px; }
+    .mb-title { font-size: 12px; opacity: .9; margin-bottom: 10px; text-align: center; }
+    .mb-bars { display: flex; align-items: flex-end; gap: 8px; height: 100px; }
+    .mb-bar { flex: 1; display: flex; align-items: flex-end; }
+    .mb-bar-fill {
+      width: 100%;
+      background: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.6) 100%);
+      border-radius: 6px 6px 3px 3px;
+      min-height: 4px;
+      transform-origin: bottom;
+      transition: height 1000ms ease-out;
+    }
+    .mb-labels { display: flex; gap: 8px; margin-top: 6px; }
+    .mb-label {
+      flex: 1;
+      text-align: center;
+      font-size: 10px;
+      opacity: .75;
+    }
+    .mb-caption {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 11px;
+      opacity: .6;
+      font-style: italic;
+    }
+
+    /* time distribution line chart (page 4) */
+    .time-distribution { margin-top: 18px; }
+    .td-title { font-size: 12px; opacity: .9; margin-bottom: 12px; text-align: center; }
+    .td-chart { height: 140px; margin-bottom: 12px; }
+    .td-emojis { display: flex; justify-content: space-around; align-items: center; }
+    .td-emoji-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .td-emoji {
+      font-size: 28px;
+      line-height: 1;
+      animation: tdEmojiBounce 2s ease-in-out infinite;
+    }
+    .td-emoji-item:nth-child(1) .td-emoji { animation-delay: 0s; }
+    .td-emoji-item:nth-child(2) .td-emoji { animation-delay: 0.5s; }
+    .td-emoji-item:nth-child(3) .td-emoji { animation-delay: 1s; }
+    .td-emoji-item:nth-child(4) .td-emoji { animation-delay: 1.5s; }
+    @keyframes tdEmojiBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    .td-emoji-label {
+      font-size: 11px;
+      opacity: .8;
+      font-weight: 600;
+    }
+    .td-emoji-value {
+      font-size: 11px;
+      opacity: .65;
+    }
+
     .wordcloud-wrap {
         margin-top: 12px;
         height: min(38vh, 260px);
@@ -727,14 +792,55 @@
         const countersHtml = (pg.counters && pg.counters.length) ? `
           <div class="counters">
             ${pg.counters.map(c => `
-              <div class="counter-row">
+              <div class="counter-row ${c.note ? 'has-note' : ''}">
                 <div class="counter-label">${c.label ?? ""}</div>
                 <div class="counter-value">
                   <span class="count-num" data-value="${Number(c.value || 0)}">0</span>
                   <span class="counter-suffix">${c.suffix ?? ""}</span>
                 </div>
+                ${c.note ? `<div class="counter-note">${c.note}</div>` : ''}
               </div>
             `).join("")}
+          </div>
+        ` : "";
+
+        // monthly breakdown bar chart (page 4)
+        const monthlyBreakdownHtml = (pg.monthly_breakdown && pg.monthly_breakdown.data && pg.monthly_breakdown.data.length) ? `
+          <div class="monthly-breakdown">
+            <div class="mb-title">月度消息分布</div>
+            <div class="mb-bars">
+              ${pg.monthly_breakdown.data.map(d => `
+                <div class="mb-bar">
+                  <div class="mb-bar-fill" data-mb-value="${Number(d.value || 0)}"></div>
+                </div>
+              `).join("")}
+            </div>
+            <div class="mb-labels">
+              ${pg.monthly_breakdown.data.map(d => `
+                <div class="mb-label">${d.month?.replace('2025-', '') ?? ''}</div>
+              `).join("")}
+            </div>
+          </div>
+        ` : "";
+
+        // time distribution line chart (page 4)
+        const timeDistHtml = (pg.time_distribution && pg.time_distribution.data && pg.time_distribution.data.length) ? `
+          <div class="time-distribution">
+            <div class="td-title">时段消息分布</div>
+            <div class="td-chart" data-td-chart="1"></div>
+            <div class="td-emojis">
+              ${pg.time_distribution.x.map((label, i) => {
+                const emojis = { '早': '🌅', '午': '☀️', '晚': '🌆', '夜': '🌙' };
+                const value = pg.time_distribution.data[i] || 0;
+                return `
+                  <div class="td-emoji-item">
+                    <div class="td-emoji">${emojis[label] || '📊'}</div>
+                    <div class="td-emoji-label">${label}</div>
+                    <div class="td-emoji-value">${value.toLocaleString('zh-CN')}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
         ` : "";
 
@@ -759,7 +865,7 @@
           </div>
         ` : "";
 
-        const topWordsHtml = (pg.id === 11 && pg.topWords && pg.topWords.length) ? `
+        const topWordsHtml = (pg.id === 9 && pg.topWords && pg.topWords.length) ? `
           <div class="topwords-list">
             ${pg.topWords.map((tw, idx) => `
               <div class="tw-row">
@@ -772,12 +878,6 @@
                 </div>
               </div>
             `).join("")}
-          </div>
-        ` : "";
-
-        const wordcloudHtml = (pg.id === 12 && pg.words && pg.words.length) ? `
-          <div class="wordcloud-wrap">
-            <div class="wordcloud" data-wordcloud="1"></div>
           </div>
         ` : "";
 
@@ -852,7 +952,7 @@
         slide.innerHTML = `
           <div class="bg" style="background-image:url('./img/p${pad2(pg.id)}.jpg')"></div>
           <div class="shade"></div>
-          <div class="pager">${pg.id} / 13</div>
+          <div class="pager">${pg.id} / ${pages.length}</div>
 
           <div class="content">
             <div class="fade-up ${isCover ? 'fade-up-1' : ''}">
@@ -867,10 +967,11 @@
               ${kvHtml}
               ${barsHtml}
               ${countersHtml}
+              ${monthlyBreakdownHtml}
+              ${timeDistHtml}
               ${asideHtml}
               ${hourChartHtml}
               ${topWordsHtml}
-              ${wordcloudHtml}
             </div>
           </div>
         `;
@@ -881,24 +982,23 @@
 
       console.log('[Main] All slides rendered, total:', slidesEl.children.length);
 
-      let wordcloudInited = false;
+      let timeDistChartInited = false;
 
-        function initWordcloud() {
-        if (wordcloudInited) return;
-        const el = document.querySelector('.swiper-slide-active .wordcloud');
+      function initTimeDistChart() {
+        const el = document.querySelector('.swiper-slide-active .td-chart');
         if (!el) {
-            console.log('[Wordcloud] Container not found');
+            console.log('[TimeDist] Container not found');
             return;
         }
 
-        const wcPage = pages.find(p => p.id === 12);
-        if (!wcPage || !wcPage.words) {
-            console.log('[Wordcloud] Page or words data not found');
+        const tdPage = pages.find(p => p.id === 4);
+        if (!tdPage || !tdPage.time_distribution) {
+            console.log('[TimeDist] Page or data not found');
             return;
         }
 
-        console.log('[Wordcloud] Initializing...', wcPage.words);
-        console.log('[Wordcloud] Container size:', el.offsetWidth, 'x', el.offsetHeight);
+        const data = tdPage.time_distribution;
+        console.log('[TimeDist] Initializing...', data);
 
         // Dispose existing chart if any
         if (el.getAttribute('_echarts_instance_')) {
@@ -906,36 +1006,79 @@
         }
 
         const chart = echarts.init(el);
-        console.log('[Wordcloud] Chart instance created');
+
+        // Calculate max for y-axis
+        const maxVal = Math.max(...data.data);
+        const yAxisMax = Math.ceil(maxVal * 1.2);
+
         chart.setOption({
             backgroundColor: 'transparent',
-            series: [{
-            type: 'wordCloud',
-            shape: 'circle',
-            left: 'center',
-            top: 'center',
-            width: '100%',
-            height: '100%',
-            gridSize: 6,
-            sizeRange: [14, 48],
-            rotationRange: [-30, 30],
-            textStyle: {
-            fontFamily: 'PingFang SC, Microsoft YaHei',
-            color: () => `rgba(255,255,255,0.98)`,
-            textBorderColor: 'rgba(0,0,0,0.55)',
-            textBorderWidth: 3,
-            textShadowColor: 'rgba(0,0,0,0.35)',
-            textShadowBlur: 8
+            grid: {
+                left: '10%',
+                right: '10%',
+                top: '15%',
+                bottom: '20%',
+                containLabel: false
             },
-            data: wcPage.words
+            xAxis: {
+                type: 'category',
+                data: data.x,
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.3)' } },
+                axisLabel: {
+                    color: 'rgba(255,255,255,0.85)',
+                    fontSize: 13,
+                    fontWeight: 600
+                },
+                axisTick: { show: false }
+            },
+            yAxis: {
+                type: 'value',
+                max: yAxisMax,
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)', type: 'dashed' } },
+                axisLabel: {
+                    color: 'rgba(255,255,255,0.6)',
+                    fontSize: 10
+                },
+                axisLine: { show: false }
+            },
+            series: [{
+                type: 'line',
+                data: data.data,
+                smooth: true,
+                smoothMonotone: 'x',
+                symbol: 'circle',
+                symbolSize: 10,
+                lineStyle: {
+                    color: 'rgba(255,255,255,0.95)',
+                    width: 3,
+                    shadowColor: 'rgba(255,255,255,0.5)',
+                    shadowBlur: 10
+                },
+                itemStyle: {
+                    color: 'rgba(255,255,255,0.95)',
+                    borderColor: 'rgba(255,255,255,1)',
+                    borderWidth: 2
+                },
+                areaStyle: {
+                    color: {
+                        type: 'linear',
+                        x: 0, y: 0, x2: 0, y2: 1,
+                        colorStops: [
+                            { offset: 0, color: 'rgba(255,255,255,0.3)' },
+                            { offset: 1, color: 'rgba(255,255,255,0.02)' }
+                        ]
+                    }
+                },
+                animationDuration: 1500,
+                animationEasing: 'cubicOut'
             }]
         });
 
         // Force resize after render
         setTimeout(() => chart.resize(), 100);
 
-        wordcloudInited = true;
-        }
+        timeDistChartInited = true;
+      }
 
 
       // Animations
@@ -994,6 +1137,29 @@
         });
       }
 
+      function animateMonthlyBreakdownForActive() {
+        const active = document.querySelector('.swiper-slide-active');
+        if (!active) return;
+
+        const mbBars = Array.from(active.querySelectorAll('.mb-bar-fill'));
+        if (!mbBars.length) return;
+
+        const mbValues = mbBars.map(b => Number(b.dataset.mbValue || 0));
+        const mbMaxV = Math.max(1, ...mbValues);
+
+        mbBars.forEach((b, i) => {
+          const v = Number(b.dataset.mbValue || 0);
+          // 计算高度：8px ~ 100px
+          const h = 8 + Math.round((v / mbMaxV) * 92);
+          b.style.height = '4px';
+          setTimeout(() => {
+            requestAnimationFrame(() => {
+              b.style.height = h + 'px';
+            });
+          }, i * 80); // 阶梯式动画
+        });
+      }
+
       // Swiper init
       console.log('[Main] Initializing Swiper...');
       const swiper = new Swiper('.swiper', {
@@ -1008,14 +1174,16 @@
               animateBarsForActive();
               animateCountersForActive();
               animateMiniChartForActive();
-              if (document.querySelector('.swiper-slide-active .wordcloud')) initWordcloud();
+              animateMonthlyBreakdownForActive();
+              if (document.querySelector('.swiper-slide-active .td-chart')) initTimeDistChart();
             });
           },
           slideChangeTransitionEnd() {
             animateBarsForActive();
             animateCountersForActive();
             animateMiniChartForActive();
-            if (document.querySelector('.swiper-slide-active .wordcloud')) initWordcloud();
+            animateMonthlyBreakdownForActive();
+            if (document.querySelector('.swiper-slide-active .td-chart')) initTimeDistChart();
           }
         }
       });
