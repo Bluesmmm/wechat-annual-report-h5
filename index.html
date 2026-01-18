@@ -592,55 +592,70 @@
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
   <script>
-    // Password Protection
-    // Default password (used when config.json is not available)
-    let CORRECT_PASSWORD = '1314.22';
+    // Password Protection - 使用后端验证
     const passwordOverlay = document.getElementById('passwordOverlay');
     const passwordInput = document.getElementById('passwordInput');
     const passwordError = document.getElementById('passwordError');
     const mainContent = document.getElementById('mainContent');
 
-    // Load password from config.json (optional, for local development)
-    async function loadConfig() {
+    // 检测是否在本地开发环境
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    async function checkPassword() {
+      const input = passwordInput.value.trim();
+
+      if (!input) return;
+
+      // 本地开发环境使用前端验证（临时）
+      if (isLocal) {
+        const localPassword = '1314.22'; // 仅用于本地测试
+        if (input === localPassword) {
+          showMainContent();
+        } else {
+          showError();
+        }
+        return;
+      }
+
+      // 生产环境使用后端验证
       try {
-        const res = await fetch('./config.json', { cache: 'no-store' });
-        if (res.ok) {
-          const config = await res.json();
-          if (config.password) {
-            CORRECT_PASSWORD = config.password;
-            console.log('Using password from config.json');
-          }
+        const res = await fetch('/api/verify-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: input })
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          showMainContent();
+        } else {
+          showError();
         }
       } catch (err) {
-        console.log('config.json not found, using default password');
+        console.error('验证请求失败:', err);
+        alert('验证失败，请稍后重试');
       }
     }
 
-    function checkPassword() {
-      const input = passwordInput.value.trim();
-      if (input === CORRECT_PASSWORD) {
-        // Correct password
-        passwordOverlay.classList.add('hidden');
-        mainContent.classList.add('visible');
-        // Start the app
-        main().catch(err => {
-          console.error('Main function error:', err);
-          alert('加载失败: ' + err.message);
-        });
-      } else {
-        // Wrong password
-        passwordError.classList.add('show');
-        passwordInput.value = '';
-        passwordInput.focus();
-        // Remove error after 2 seconds
-        setTimeout(() => {
-          passwordError.classList.remove('show');
-        }, 2000);
-      }
+    function showMainContent() {
+      passwordOverlay.classList.add('hidden');
+      mainContent.classList.add('visible');
+      // Start the app
+      main().catch(err => {
+        console.error('Main function error:', err);
+        alert('加载失败: ' + err.message);
+      });
     }
 
-    // Initialize password on page load
-    loadConfig();
+    function showError() {
+      passwordError.classList.add('show');
+      passwordInput.value = '';
+      passwordInput.focus();
+      setTimeout(() => {
+        passwordError.classList.remove('show');
+      }, 2000);
+    }
 
     // Handle Enter key
     passwordInput.addEventListener('keydown', (e) => {
