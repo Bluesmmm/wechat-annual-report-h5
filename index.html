@@ -763,7 +763,7 @@
       console.log('[Main] Starting to render slides...');
       pages.forEach((pg, idx) => {
         const slide = document.createElement("div");
-        const isCover = pg.type === 'cover' || pg.id === 1;
+        const isCover = pg.type === 'cover' || pg.type === 'summary';
         const isPage2 = pg.id === 2;
         const isPage3 = pg.id === 3;
         slide.className = `swiper-slide page${isCover ? ' page-cover' : ''}${isPage2 ? ' page-2' : ''}${isPage3 ? ' page-3' : ''}`;
@@ -950,7 +950,7 @@
         }
 
         slide.innerHTML = `
-          <div class="bg" style="background-image:url('./img/p${pad2(pg.id)}.jpg')"></div>
+          <div class="bg" style="background-image:url('./img/p${pad2(pg.id)}.jpg?v=2')"></div>
           <div class="shade"></div>
           <div class="pager">${pg.id} / ${pages.length}</div>
 
