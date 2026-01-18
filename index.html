@@ -160,6 +160,18 @@
     .counter-value { font-size: 20px; font-weight: 900; letter-spacing: .2px; }
     .counter-suffix { font-size: 12px; opacity: .9; margin-left: 4px; font-weight: 700; }
 
+    /* aside (page 4 etc.) */
+    .aside {
+      margin-top: 18px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-style: italic;
+      opacity: 0.7;
+      text-align: center;
+      border-top: 1px dashed rgba(255,255,255,0.3);
+      line-height: 1.6;
+    }
+
     /* mini bar chart (page 6 hourTop) */
     .mini-chart { margin-top: 12px; }
     .mini-chart-title { font-size: 12px; opacity: .9; margin-bottom: 8px; }
@@ -726,6 +738,11 @@
           </div>
         ` : "";
 
+        // aside (page 4 etc.)
+        const asideHtml = (pg.aside) ? `
+          <div class="aside">${pg.aside}</div>
+        ` : "";
+
         const hourChartHtml = (pg.hourTop && pg.hourTop.length) ? `
           <div class="mini-chart">
             <div class="mini-chart-title">Top 时段分布</div>
@@ -850,6 +867,7 @@
               ${kvHtml}
               ${barsHtml}
               ${countersHtml}
+              ${asideHtml}
               ${hourChartHtml}
               ${topWordsHtml}
               ${wordcloudHtml}
